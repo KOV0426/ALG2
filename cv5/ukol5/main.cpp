@@ -3,9 +3,7 @@
 #include <algorithm>
 #include <fstream>
 #include <sstream>
-
 using namespace std;
-
 vector<vector<int>> readSimplicesFromFile(const string& filename) {
     ifstream file(filename);
     vector<vector<int>> simplices;
@@ -26,7 +24,6 @@ vector<vector<int>> readSimplicesFromFile(const string& filename) {
     file.close();
     return simplices;
 }
-
 vector<vector<int>> combinations(int n, int k) {
 	vector<vector<int>> res;
 	if (k < 0 or k > n) {
@@ -54,18 +51,14 @@ vector<vector<int>> combinations(int n, int k) {
 	}
 	return res;
 }
-
 void findBoundary(const string& filename) {
-    vector<vector<int>> input_simplices = readSimplicesFromFile(filename);
-    if (input_simplices.empty()) {
+    vector<vector<int>> inputSimplices = readSimplicesFromFile(filename);
+    if (inputSimplices.empty()) {
         cerr << "No simplices found in file.\n";
         return;
     }
-
     vector<vector<int>> simplices;
-    vector<int> all_vertices;
-
-    for (auto s : input_simplices) {
+    for (auto s : inputSimplices) {
         sort(s.begin(), s.end());
         simplices.push_back(s);
         int n = (int)s.size();
@@ -79,34 +72,25 @@ void findBoundary(const string& filename) {
                 simplices.push_back(subs);
             }
         }
-        for (int x : s) {
-            all_vertices.push_back(x);
-        }
     }
-
     sort(simplices.begin(), simplices.end());
     simplices.erase(unique(simplices.begin(), simplices.end()), simplices.end());
-    sort(all_vertices.begin(), all_vertices.end());
-    all_vertices.erase(unique(all_vertices.begin(), all_vertices.end()), all_vertices.end());
-
+    
     if (simplices.empty()) {
         cout << "No simplices provided.\n";
         return;
     }
-
-    int max_dim = 0;
+    int maxDim = 0;
     for (const auto &s : simplices) {
         int dim = (int)s.size() - 1;
-        max_dim = max(max_dim, dim);
+        maxDim = max(maxDim, dim);
     }
-
-    vector<int> count_by_dim(max_dim + 1, 0);
+    vector<int> countByDim(maxDim + 1, 0);
     for (const auto &s : simplices) {
         int dim = (int)s.size() - 1;
-        count_by_dim[dim]++;
+        countByDim[dim]++;
     }
-
-    vector<vector<int>> all_faces;
+    vector<vector<int>> allFaces;
     for (const auto &s : simplices) {
         int n = (int)s.size();
         if (n <= 1) continue;
@@ -114,37 +98,33 @@ void findBoundary(const string& filename) {
         for (auto &idxs : combs) {
             vector<int> face;
             for (int i : idxs) face.push_back(s[i]);
-            all_faces.push_back(face);
+            allFaces.push_back(face);
         }
     }
-
-    sort(all_faces.begin(), all_faces.end());
-    vector<vector<int>> boundary_faces;
-    for (size_t i = 0; i < all_faces.size(); ) {
+    sort(allFaces.begin(), allFaces.end());
+    vector<vector<int>> boundaryFaces;
+    for (size_t i = 0; i < allFaces.size(); ) {
         size_t j = i + 1;
-        while (j < all_faces.size() && all_faces[j] == all_faces[i]) j++;
-        if (j - i == 1) boundary_faces.push_back(all_faces[i]);
+        while (j < allFaces.size() && allFaces[j] == allFaces[i]) j++;
+        if (j - i == 1) boundaryFaces.push_back(allFaces[i]);
         i = j;
     }
-
     long long chi = 0;
-    for (size_t d = 0; d < count_by_dim.size(); ++d) {
-        if (d % 2 == 0) chi += count_by_dim[d];
-        else chi -= count_by_dim[d];
+    for (size_t d = 0; d < countByDim.size(); ++d) {
+        if (d % 2 == 0) chi += countByDim[d];
+        else chi -= countByDim[d];
     }
-
     vector<string> labels = {"Verticies", "Edges", "Triangles", "Tetrahedrons"};
-    for (size_t d = 0; d < count_by_dim.size(); ++d) {
+    for (size_t d = 0; d < countByDim.size(); ++d) {
         string label;
         if (d < labels.size()) label = labels[d];
         else label = "Dim " + to_string(d);
-        cout << label << ": " << count_by_dim[d] << '\n';
+        cout << label << ": " << countByDim[d] << '\n';
     }
-
     cout << "chi: " << chi << "\n\n";
-    if (boundary_faces.empty()) cout << "Boundary:\nis empty\n";
+    if (boundaryFaces.empty()) cout << "Boundary:\nis empty\n";
     else {
-        for (const auto &f : boundary_faces) {
+        for (const auto &f : boundaryFaces) {
             for (size_t i = 0; i < f.size(); ++i) {
                 if (i) cout << ' ';
                 cout << f[i];
@@ -153,7 +133,6 @@ void findBoundary(const string& filename) {
         }
     }
 }
-
 int main(int argc, char* argv[]) {
     if (argc != 2) {
         cerr << "Not enough arguments\n";
